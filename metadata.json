@@ -1,0 +1,5 @@
+{
+  "name": "SplitGrid",
+  "description": "A simple and efficient image splitter tool that allows users to slice images into custom grids and download them instantly.",
+  "requestFramePermissions": []
+}
