@@ -143,13 +143,25 @@ const App: React.FC = () => {
                 <button
                   onClick={handleSplit}
                   disabled={isProcessing}
-                  className={`w-full py-3 px-4 rounded-lg font-bold text-white shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5
+                  className={`w-full py-3.5 px-6 rounded-lg font-bold text-white text-lg transition-all duration-200 transform hover:-translate-y-0.5
                             ${isProcessing
-                      ? 'bg-indigo-600/50 cursor-wait'
-                      : 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400'
+                      ? 'bg-slate-700 cursor-wait opacity-80'
+                      : 'bg-[#5865F2] hover:bg-[#4752C4]'
                     }`}
                 >
-                  {isProcessing ? t('processing') : t('splitImage')}
+                  <span className="flex items-center justify-center gap-2">
+                    {isProcessing ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t('processing')}
+                      </>
+                    ) : (
+                      t('splitImage')
+                    )}
+                  </span>
                 </button>
 
                 <button
@@ -164,21 +176,23 @@ const App: React.FC = () => {
         )}
 
         {/* Results View */}
-        {splitResult && imageSrc && (
-          <SplitResults
-            splits={splitResult}
-            gridConfig={gridConfig}
-            baseFilename={selectedFile?.name.split('.')[0] || 'image'}
-            onReset={handleReset}
-          />
-        )}
+        {
+          splitResult && imageSrc && (
+            <SplitResults
+              splits={splitResult}
+              gridConfig={gridConfig}
+              baseFilename={selectedFile?.name.split('.')[0] || 'image'}
+              onReset={handleReset}
+            />
+          )
+        }
 
-      </main>
+      </main >
 
       <footer className="mt-12 text-slate-500 text-sm">
         <p>{t('footer')}</p>
       </footer>
-    </div>
+    </div >
   );
 };
 
