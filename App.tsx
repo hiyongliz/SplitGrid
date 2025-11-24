@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import Dropzone from './components/Dropzone';
 import GridOverlay from './components/GridOverlay';
+import Logo from './components/Logo';
 import SplitResults from './components/SplitResults';
-import { GridConfig, SplitImage } from './types';
-import { loadImage, splitImage } from './services/imageUtils';
 import { useLanguage } from './contexts/LanguageContext';
+import { loadImage, splitImage } from './services/imageUtils';
+import { GridConfig, SplitImage } from './types';
 
 const App: React.FC = () => {
   // Hooks
@@ -40,7 +41,7 @@ const App: React.FC = () => {
     setIsProcessing(true);
     try {
       const img = await loadImage(selectedFile);
-      
+
       // Determine filename base
       let baseFilename = selectedFile.name.split('.')[0];
 
@@ -62,17 +63,17 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col items-center py-10 px-4 sm:px-6 relative">
-      
+
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-        <button 
-          onClick={() => setLanguage('en')} 
+        <button
+          onClick={() => setLanguage('en')}
           className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
         >
           EN
         </button>
-        <button 
-          onClick={() => setLanguage('zh')} 
+        <button
+          onClick={() => setLanguage('zh')}
           className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'zh' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
         >
           中文
@@ -80,8 +81,10 @@ const App: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="mb-12 text-center max-w-2xl mt-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 mb-4">
+      <header className="mb-12 text-center max-w-2xl mt-6 flex flex-col items-center">
+        <Logo className="w-20 h-20 mb-4 opacity-90 hover:scale-105 transition-transform duration-300" />
+        {console.log("Title:", t('appTitle'))}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-indigo-400 mb-4">
           {t('appTitle')}
         </h1>
         <p className="text-slate-400 text-lg">
@@ -90,84 +93,84 @@ const App: React.FC = () => {
       </header>
 
       <main className="w-full max-w-5xl bg-slate-900/50 rounded-2xl border border-slate-800 backdrop-blur-sm p-6 md:p-10 shadow-2xl">
-        
+
         {/* Upload View */}
         {!selectedFile && (
-           <Dropzone onImageSelected={handleImageSelected} />
+          <Dropzone onImageSelected={handleImageSelected} />
         )}
 
         {/* Editor View */}
         {selectedFile && imageSrc && !splitResult && (
           <div className="flex flex-col lg:flex-row gap-8 animate-fade-in">
-            
+
             {/* Left: Image Preview */}
             <div className="flex-1 min-w-0">
-               <GridOverlay imageSrc={imageSrc} config={gridConfig} />
+              <GridOverlay imageSrc={imageSrc} config={gridConfig} />
             </div>
 
             {/* Right: Controls */}
             <div className="w-full lg:w-80 flex flex-col gap-6">
-                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-6">
-                    <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">{t('gridSettings')}</h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-1">{t('rows')}</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="20"
-                                    value={gridConfig.rows}
-                                    onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-1">{t('cols')}</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="20"
-                                    value={gridConfig.cols}
-                                    onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
-                                />
-                            </div>
-                        </div>
-                    </div>
+              <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">{t('gridSettings')}</h3>
 
-                    <button
-                        onClick={handleSplit}
-                        disabled={isProcessing}
-                        className={`w-full py-3 px-4 rounded-lg font-bold text-white shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5
-                            ${isProcessing 
-                                ? 'bg-indigo-600/50 cursor-wait' 
-                                : 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400'
-                            }`}
-                    >
-                        {isProcessing ? t('processing') : t('splitImage')}
-                    </button>
-                    
-                     <button
-                        onClick={handleReset}
-                        className="w-full py-2 px-4 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-                    >
-                        {t('chooseDifferent')}
-                    </button>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-1">{t('rows')}</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={gridConfig.rows}
+                        onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-1">{t('cols')}</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={gridConfig.cols}
+                        onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
+                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                <button
+                  onClick={handleSplit}
+                  disabled={isProcessing}
+                  className={`w-full py-3 px-4 rounded-lg font-bold text-white shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5
+                            ${isProcessing
+                      ? 'bg-indigo-600/50 cursor-wait'
+                      : 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400'
+                    }`}
+                >
+                  {isProcessing ? t('processing') : t('splitImage')}
+                </button>
+
+                <button
+                  onClick={handleReset}
+                  className="w-full py-2 px-4 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                >
+                  {t('chooseDifferent')}
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* Results View */}
         {splitResult && imageSrc && (
-            <SplitResults 
-                splits={splitResult} 
-                gridConfig={gridConfig} 
-                baseFilename={selectedFile?.name.split('.')[0] || 'image'}
-                onReset={handleReset}
-            />
+          <SplitResults
+            splits={splitResult}
+            gridConfig={gridConfig}
+            baseFilename={selectedFile?.name.split('.')[0] || 'image'}
+            onReset={handleReset}
+          />
         )}
 
       </main>

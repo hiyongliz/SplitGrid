@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="scissor-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Handles -->
+  <circle cx="6" cy="6" r="3" stroke="url(#scissor-gradient)" />
+  <circle cx="6" cy="18" r="3" stroke="url(#scissor-gradient)" />
+  
+  <!-- Blades -->
+  <path d="M20 4L8.12 15.88" stroke="url(#scissor-gradient)" />
+  <path d="M14.47 14.48L20 20" stroke="url(#scissor-gradient)" />
+  <path d="M8.12 8.12L12 12" stroke="url(#scissor-gradient)" />
+</svg>
