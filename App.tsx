@@ -1,10 +1,14 @@
+
 import React, { useCallback, useState } from 'react';
+import { PixelCrop } from 'react-image-crop';
 import Dropzone from './components/Dropzone';
 import GridOverlay from './components/GridOverlay';
+import ImageCropper from './components/ImageCropper';
 import Logo from './components/Logo';
 import SplitResults from './components/SplitResults';
 import { useLanguage } from './contexts/LanguageContext';
-import { loadImage, splitImage } from './services/imageUtils';
+import getCroppedImg from './services/cropUtils';
+import { splitImage } from './services/imageUtils';
 import { GridConfig, SplitImage } from './types';
 
 const App: React.FC = () => {
@@ -17,6 +21,7 @@ const App: React.FC = () => {
   const [gridConfig, setGridConfig] = useState<GridConfig>({ rows: 3, cols: 3 });
   const [isProcessing, setIsProcessing] = useState(false);
   const [splitResult, setSplitResult] = useState<SplitImage[] | null>(null);
+  const [isCropping, setIsCropping] = useState(false);
 
   // Handle file selection
   const handleImageSelected = useCallback((file: File) => {
@@ -24,14 +29,39 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(file);
     setImageSrc(url);
     setSplitResult(null); // Reset results
+    setIsCropping(true); // Start cropping
   }, []);
+
+  const handleCropComplete = async (croppedAreaPixels: PixelCrop) => {
+    if (imageSrc) {
+      try {
+        const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+        if (croppedImage) {
+          setImageSrc(croppedImage);
+          setIsCropping(false);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleCancelCrop = () => {
+    setIsCropping(false);
+    setSelectedFile(null);
+    setImageSrc(null);
+  };
+
+  const handleSkipCrop = () => {
+    setIsCropping(false);
+  };
 
   // Handle grid change
   const handleGridChange = (key: keyof GridConfig, value: number) => {
     setGridConfig(prev => {
       const newConfig = {
         ...prev,
-        [key]: Math.max(1, Math.min(20, value)) // Clamp between 1 and 20
+        [key]: Math.max(0, Math.min(20, value)) // Clamp between 0 and 20
       };
 
       // Reset custom positions when grid size changes
@@ -76,14 +106,23 @@ const App: React.FC = () => {
 
   // Split Action
   const handleSplit = async () => {
-    if (!selectedFile || !imageSrc) return;
+    if (!imageSrc) return;
 
     setIsProcessing(true);
     try {
-      const img = await loadImage(selectedFile);
+      // We need to load the *current* imageSrc (which might be cropped)
+      // loadImage handles File or string URL if we modify it, but currently it takes File.
+      // However, splitImage takes HTMLImageElement.
+      // Let's load the image from the src URL.
+      const img = new Image();
+      img.src = imageSrc;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
 
       // Determine filename base
-      let baseFilename = selectedFile.name.split('.')[0];
+      let baseFilename = selectedFile?.name.split('.')[0] || 'image';
 
       const splits = await splitImage(img, gridConfig, baseFilename);
       setSplitResult(splits);
@@ -99,6 +138,7 @@ const App: React.FC = () => {
     setSplitResult(null);
     setSelectedFile(null);
     setImageSrc(null);
+    setIsCropping(false);
   };
 
   return (
@@ -108,13 +148,13 @@ const App: React.FC = () => {
       <div className="absolute top-4 right-4 flex bg-slate-800 rounded-lg p-1 border border-slate-700">
         <button
           onClick={() => setLanguage('en')}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'en' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
         >
           EN
         </button>
         <button
           onClick={() => setLanguage('zh')}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'zh' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${language === 'zh' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
         >
           中文
         </button>
@@ -139,8 +179,20 @@ const App: React.FC = () => {
           <Dropzone onImageSelected={handleImageSelected} />
         )}
 
+        {/* Cropping View */}
+        {selectedFile && imageSrc && isCropping && (
+          <div className="h-[600px] animate-fade-in">
+            <ImageCropper
+              imageSrc={imageSrc}
+              onCropComplete={handleCropComplete}
+              onCancel={handleCancelCrop}
+              onSkip={handleSkipCrop}
+            />
+          </div>
+        )}
+
         {/* Editor View */}
-        {selectedFile && imageSrc && !splitResult && (
+        {selectedFile && imageSrc && !isCropping && !splitResult && (
           <div className="flex flex-col lg:flex-row gap-8 animate-fade-in">
 
             {/* Left: Image Preview */}
@@ -163,10 +215,10 @@ const App: React.FC = () => {
                       <label className="block text-sm font-medium text-slate-400 mb-1">{t('rows')}</label>
                       <input
                         type="number"
-                        min="1"
+                        min="0"
                         max="20"
                         value={gridConfig.rows}
-                        onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
+                        onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 0)}
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
                       />
                     </div>
@@ -174,10 +226,10 @@ const App: React.FC = () => {
                       <label className="block text-sm font-medium text-slate-400 mb-1">{t('cols')}</label>
                       <input
                         type="number"
-                        min="1"
+                        min="0"
                         max="20"
                         value={gridConfig.cols}
-                        onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
+                        onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 0)}
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
                       />
                     </div>
@@ -187,10 +239,10 @@ const App: React.FC = () => {
                 <button
                   onClick={handleSplit}
                   disabled={isProcessing}
-                  className={`w-full py-3.5 px-6 rounded-lg font-bold text-white text-lg transition-all duration-200 transform hover:-translate-y-0.5
+                  className={`w-full py-2 px-4 rounded-lg font-bold text-white text-lg transition-all duration-200  hover:shadow-indigo-500/25
                             ${isProcessing
                       ? 'bg-slate-700 cursor-wait opacity-80'
-                      : 'bg-[#5865F2] hover:bg-[#4752C4]'
+                      : 'bg-indigo-600 hover:bg-indigo-500'
                     }`}
                 >
                   <span className="flex items-center justify-center gap-2">

@@ -14,7 +14,11 @@ export const splitImage = async (
   config: GridConfig,
   baseFilename: string
 ): Promise<SplitImage[]> => {
-  const { rows, cols, rowPositions, colPositions } = config;
+  const { rows: configRows, cols: configCols, rowPositions, colPositions } = config;
+
+  // Treat 0 as 1 for splitting purposes (0 cuts = 1 piece)
+  const rows = configRows === 0 ? 1 : configRows;
+  const cols = configCols === 0 ? 1 : configCols;
 
   // Calculate cut points (in pixels)
   // Default equal distribution if no custom positions

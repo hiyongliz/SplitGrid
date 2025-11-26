@@ -22,8 +22,12 @@ const GridOverlay: React.FC<GridOverlayProps> = ({ imageSrc, config, onGridDrag 
   }, [imageSrc]);
 
   // Calculate positions (use config or default equal distribution)
-  const rowPositions = config.rowPositions || Array.from({ length: config.rows - 1 }, (_, i) => ((i + 1) / config.rows) * 100);
-  const colPositions = config.colPositions || Array.from({ length: config.cols - 1 }, (_, i) => ((i + 1) / config.cols) * 100);
+  const rowPositions = config.rows > 0
+    ? (config.rowPositions || Array.from({ length: config.rows - 1 }, (_, i) => ((i + 1) / config.rows) * 100))
+    : [];
+  const colPositions = config.cols > 0
+    ? (config.colPositions || Array.from({ length: config.cols - 1 }, (_, i) => ((i + 1) / config.cols) * 100))
+    : [];
 
   const handleMouseDown = (e: React.MouseEvent, type: 'row' | 'col', index: number) => {
     e.preventDefault();

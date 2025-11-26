@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 type Language = 'en' | 'zh';
 
@@ -23,6 +23,14 @@ export const translations = {
     downloadSlice: "Download this slice",
     splitError: "Failed to split image.",
     footer: "Powered by React and Tailwind",
+    skip: "Skip",
+    crop: "Crop",
+    cancel: "Cancel",
+    zoom: "Zoom",
+    ratioFree: "Free",
+    ratio11: "1:1",
+    ratio43: "4:3",
+    ratio169: "16:9",
   },
   zh: {
     appTitle: "SplitGrid",
@@ -44,6 +52,14 @@ export const translations = {
     downloadSlice: "下载此切片",
     splitError: "图片切割失败。",
     footer: "基于 React 和 Tailwind 构建",
+    skip: "跳过",
+    crop: "确认裁剪",
+    cancel: "取消",
+    zoom: "缩放",
+    ratioFree: "自由",
+    ratio11: "1:1",
+    ratio43: "4:3",
+    ratio169: "16:9",
   }
 };
 
