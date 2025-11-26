@@ -15,6 +15,8 @@ export interface ImageDimensions {
 export interface GridConfig {
   rows: number;
   cols: number;
+  rowPositions?: number[]; // Percentages (0-100) for row dividers
+  colPositions?: number[]; // Percentages (0-100) for col dividers
 }
 
 export interface AnalysisResult {

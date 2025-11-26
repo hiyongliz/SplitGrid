@@ -28,11 +28,51 @@ const App: React.FC = () => {
 
   // Handle grid change
   const handleGridChange = (key: keyof GridConfig, value: number) => {
-    setGridConfig(prev => ({
-      ...prev,
-      [key]: Math.max(1, Math.min(20, value)) // Clamp between 1 and 20
-    }));
+    setGridConfig(prev => {
+      const newConfig = {
+        ...prev,
+        [key]: Math.max(1, Math.min(20, value)) // Clamp between 1 and 20
+      };
+
+      // Reset custom positions when grid size changes
+      if (key === 'rows') {
+        newConfig.rowPositions = undefined;
+      }
+      if (key === 'cols') {
+        newConfig.colPositions = undefined;
+      }
+      return newConfig;
+    });
   };
+
+  const handleGridDrag = useCallback((type: 'row' | 'col', index: number, newPos: number) => {
+    setGridConfig(prev => {
+      const newConfig = { ...prev };
+
+      if (type === 'row') {
+        const positions = prev.rowPositions
+          ? [...prev.rowPositions]
+          : Array.from({ length: prev.rows - 1 }, (_, i) => ((i + 1) / prev.rows) * 100);
+        positions[index] = newPos;
+        // Sort to prevent crossing lines? Or just let them cross? 
+        // Sorting is safer for logic but might feel jumpy. Let's just update.
+        // Actually, sorting is good to keep index consistent with visual order if we wanted that,
+        // but here index is tied to the specific divider.
+        // Let's just clamp to neighbors to avoid crossing.
+
+        // Simple update for now
+        newConfig.rowPositions = positions.sort((a, b) => a - b);
+      } else {
+        const positions = prev.colPositions
+          ? [...prev.colPositions]
+          : Array.from({ length: prev.cols - 1 }, (_, i) => ((i + 1) / prev.cols) * 100);
+        positions[index] = newPos;
+        newConfig.colPositions = positions.sort((a, b) => a - b);
+      }
+
+      return newConfig;
+    });
+  }, []);
 
   // Split Action
   const handleSplit = async () => {
@@ -105,7 +145,11 @@ const App: React.FC = () => {
 
             {/* Left: Image Preview */}
             <div className="flex-1 min-w-0">
-              <GridOverlay imageSrc={imageSrc} config={gridConfig} />
+              <GridOverlay
+                imageSrc={imageSrc}
+                config={gridConfig}
+                onGridDrag={handleGridDrag}
+              />
             </div>
 
             {/* Right: Controls */}

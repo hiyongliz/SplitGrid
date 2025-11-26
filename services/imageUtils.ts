@@ -14,37 +14,60 @@ export const splitImage = async (
   config: GridConfig,
   baseFilename: string
 ): Promise<SplitImage[]> => {
-  const { rows, cols } = config;
-  const chunkWidth = image.width / cols;
-  const chunkHeight = image.height / rows;
-  const splits: SplitImage[] = [];
+  const { rows, cols, rowPositions, colPositions } = config;
 
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error("Could not get canvas context");
+  // Calculate cut points (in pixels)
+  // Default equal distribution if no custom positions
+  const rowCuts = [0];
+  if (rowPositions && rowPositions.length === rows - 1) {
+    rowPositions.forEach(p => rowCuts.push((p / 100) * image.height));
+  } else {
+    for (let i = 1; i < rows; i++) {
+      rowCuts.push((i / rows) * image.height);
+    }
   }
+  rowCuts.push(image.height);
 
-  canvas.width = chunkWidth;
-  canvas.height = chunkHeight;
+  const colCuts = [0];
+  if (colPositions && colPositions.length === cols - 1) {
+    colPositions.forEach(p => colCuts.push((p / 100) * image.width));
+  } else {
+    for (let i = 1; i < cols; i++) {
+      colCuts.push((i / cols) * image.width);
+    }
+  }
+  colCuts.push(image.width);
+
+  const splits: SplitImage[] = [];
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      // Clear canvas for new draw
-      ctx.clearRect(0, 0, chunkWidth, chunkHeight);
+      const x = colCuts[c];
+      const y = rowCuts[r];
+      const width = colCuts[c + 1] - colCuts[c];
+      const height = rowCuts[r + 1] - rowCuts[r];
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        throw new Error("Could not get canvas context");
+      }
+
+      canvas.width = width;
+      canvas.height = height;
 
       // Draw the specific section of the source image
       ctx.drawImage(
         image,
-        c * chunkWidth, // source x
-        r * chunkHeight, // source y
-        chunkWidth, // source width
-        chunkHeight, // source height
+        x, // source x
+        y, // source y
+        width, // source width
+        height, // source height
         0, // dest x
         0, // dest y
-        chunkWidth, // dest width
-        chunkHeight // dest height
+        width, // dest width
+        height // dest height
       );
 
       // Convert to blob and data URL
